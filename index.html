@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fluglabbet</title>
+<meta name="description" content="Bananflugan Jaffar ser två bilder med facettögon och en FlyWire-inspirerad hjärnkrets, och lär sig gå till den bild som har mest vitt.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#edf0f1; --panel:#ffffff; --ink:#17202a; --muted:#5a6874; --line:#d3dade; --soft:#f4f6f7;
+  --accent:#c47a06; --neuron:#0d7a84; --neg:#9a3d58; --wire:rgba(23,32,42,.10);
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10151a; --panel:#172028; --ink:#e2e8ed; --muted:#93a2ae; --line:#29343f; --soft:#1c2630;
+    --accent:#f0a52a; --neuron:#3fc4cb; --neg:#d77b95; --wire:rgba(226,232,237,.10);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10151a; --panel:#172028; --ink:#e2e8ed; --muted:#93a2ae; --line:#29343f; --soft:#1c2630;
+  --accent:#f0a52a; --neuron:#3fc4cb; --neg:#d77b95; --wire:rgba(226,232,237,.10);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:20px 48px;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted);max-width:64ch}
+.stats{display:flex;flex-wrap:wrap;gap:6px 20px;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.stats div{display:grid}
+.stats span{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.stats b{font-weight:500;font-size:18px}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:12px;min-width:0}
+.stage{position:relative;border-radius:10px;overflow:hidden;background:#c9d0d4;height:clamp(360px,64vh,660px)}
+#view{display:block;width:100%;height:100%;touch-action:none}
+.status{position:absolute;left:12px;top:12px;padding:6px 10px;border-radius:6px;background:rgba(16,21,26,.72);color:#f2f4f5;font-family:var(--mono);font-size:12px;max-width:calc(100% - 24px)}
+.status.rew{background:rgba(196,122,6,.92)}
+.status.om{background:rgba(120,40,64,.88)}
+.eyes{position:absolute;left:12px;right:12px;bottom:12px;padding:8px 10px 6px;border-radius:8px;background:rgba(16,21,26,.78);color:#dfe5e9;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.eyes canvas{display:block;width:100%;height:62px}
+.eyes .lbl{display:flex;justify-content:space-between;margin-top:3px;gap:8px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 13px var(--body);padding:7px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 13px var(--body);padding:7px 14px;border-radius:7px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1b1204}
+button:focus-visible,input:focus-visible{outline:2px solid var(--neuron);outline-offset:2px}
+.glabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px;min-width:0}
+.card h2{font-family:var(--display);font-weight:500;font-size:18px;margin:0}
+.note{color:var(--muted);font-size:13px;margin:0}
+#brain{width:100%;height:340px;display:block}
+#chart{width:100%;height:120px;display:block}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slot{display:grid;gap:6px;padding:10px;border:1px dashed var(--line);border-radius:8px;background:var(--soft);min-width:0}
+.slot.drag{border-color:var(--neuron)}
+.slot.win{border-style:solid;border-color:var(--accent)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pair figure{margin:0;display:grid;gap:2px}
+.pair canvas{width:100%;aspect-ratio:1;max-width:100%;border-radius:4px;display:block;background:#888;image-rendering:pixelated}
+.pair figcaption{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.slot .nm{font-weight:600;font-size:13px;overflow-wrap:anywhere}
+.shares{display:flex;height:9px;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+.shares i{display:block;height:100%}
+.slot .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.slot .win-tag{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.upl{position:relative;display:inline-block;text-align:center;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 13px var(--body);padding:6px 10px;border-radius:7px;cursor:pointer}
+.upl:focus-within{outline:2px solid var(--neuron);outline-offset:2px}
+.upl input{position:absolute;opacity:0;width:1px;height:1px}
+.key{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
+.key span{display:inline-flex;align-items:center;gap:5px}
+.key i{width:11px;height:11px;border:1px solid var(--muted);display:inline-block}
+.vals{display:grid;gap:8px}
+.val{display:grid;grid-template-columns:minmax(0,110px) 1fr 58px;gap:10px;align-items:center;font-size:13px}
+.val>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.val .track{position:relative;height:14px;background:var(--soft);border-radius:3px}
+.val .track::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted)}
+.val .bar{position:absolute;top:0;bottom:0;border-radius:3px}
+.val .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.sliders{display:grid;gap:10px}
+.sliders label{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px}
+.sliders input{grid-column:1/-1;width:100%;accent-color:var(--neuron)}
+.sliders output{font-family:var(--mono);color:var(--muted)}
+.about{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.about p,.about li{max-width:65ch;font-size:14px}
+.about ul{padding-left:18px;margin:6px 0}
+.about code{font-family:var(--mono);font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Fluglabbet</h1>
+      <p class="sub">Bananflugan Jaffar ser två bilder. Den bild som har mest vitt ger en sockerdroppe, och dopamin skriver om kopplingarna i hans svampkropp tills han väljer rätt. Byt gärna bilderna mot egna.</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div><span>Försök</span><b id="sTrials">0</b></div>
+      <div><span>Belöningar</span><b id="sRew">0</b></div>
+      <div><span>Rätt, senaste 10</span><b id="sPct">–</b></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button class="btn primary" id="play">Pausa</button>
+    <div><span class="glabel">Tempo</span>
+      <div class="seg" id="speed"><button data-v="1" aria-pressed="true">1×</button><button data-v="4" aria-pressed="false">4×</button><button data-v="16" aria-pressed="false">16×</button></div></div>
+    <div><span class="glabel">Kamera</span>
+      <div class="seg" id="cam"><button data-v="arena" aria-pressed="true">Arena</button><button data-v="follow" aria-pressed="false">Följ flugan</button><button data-v="model" aria-pressed="false">Närbild</button></div></div>
+    <button class="btn" id="reset">Nollställ minnet</button>
+  </div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="stage">
+        <canvas id="view" aria-label="3D-arena med flugan och två bilder"></canvas>
+        <div class="status" id="status">Försök 1 · går</div>
+        <div class="eyes">
+          <canvas id="eyecv"></canvas>
+          <div class="lbl"><span>◀ vänster öga · bak</span><span>Jaffars synfält, 252 ommatidier · fram</span><span>höger öga · bak ▶</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Bilderna</h2>
+        <p class="note">Ladda upp två egna bilder eller dra dem hit. Till höger om varje bild syns hur den delas upp i vitt, ljust, mellan och mörkt. Bilden med mest rent vitt ger socker.</p>
+        <div class="slots">
+          <div class="slot" id="slot0">
+            <div class="pair"><figure><canvas id="th0" width="128" height="128"></canvas><figcaption>Bild</figcaption></figure><figure><canvas id="mp0" width="128" height="128"></canvas><figcaption>Ljusanalys</figcaption></figure></div>
+            <span class="nm" id="nm0">Svart ruta</span>
+            <div class="shares" id="sh0"></div>
+            <span class="meta" id="mt0"></span>
+            <span class="win-tag" id="wt0" hidden>ger socker</span>
+            <label class="upl">Välj bild A<input type="file" id="f0" accept="image/*"></label>
+          </div>
+          <div class="slot" id="slot1">
+            <div class="pair"><figure><canvas id="th1" width="128" height="128"></canvas><figcaption>Bild</figcaption></figure><figure><canvas id="mp1" width="128" height="128"></canvas><figcaption>Ljusanalys</figcaption></figure></div>
+            <span class="nm" id="nm1">Vit ruta</span>
+            <div class="shares" id="sh1"></div>
+            <span class="meta" id="mt1"></span>
+            <span class="win-tag" id="wt1" hidden>ger socker</span>
+            <label class="upl">Välj bild B<input type="file" id="f1" accept="image/*"></label>
+          </div>
+        </div>
+        <div class="key"><span><i style="background:#ffffff"></i>vitt</span><span><i style="background:#c3cad0"></i>ljust men inte vitt</span><span><i style="background:#737a81"></i>mellan</span><span><i style="background:#121212"></i>mörkt</span></div>
+        <button class="btn" id="defaults">Tillbaka till svart och vit ruta</button>
+      </div>
+      <div class="card">
+        <h2>Inlärning</h2>
+        <canvas id="chart"></canvas>
+        <div class="legend"><span><span class="dot" style="background:#f4f4ef;border:1px solid #777"></span>valde bilden med mest vitt (socker)</span><span><span class="dot" style="background:#111"></span>valde den andra</span><span><span class="dot" style="border:1px solid #888"></span>inget val</span><span><span class="dot" style="background:var(--neuron)"></span>andel rätt, glidande 10</span></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <h2>Hjärnkretsen just nu</h2>
+        <canvas id="brain"></canvas>
+        <p class="note">Övre halvan är vänster hjärnhalva, nedre halvan höger. Ljusare nod betyder högre aktivitet. Kenyonceller med gul ram har lärt sig "här finns socker".</p>
+      </div>
+      <div class="card">
+        <h2>Vad Jaffar tycker</h2>
+        <div class="vals">
+          <div class="val"><span id="lA">Bild A</span><div class="track"><div class="bar" id="bA"></div></div><span class="num" id="nA">0.00</span></div>
+          <div class="val"><span id="lB">Bild B</span><div class="track"><div class="bar" id="bB"></div></div><span class="num" id="nB">0.00</span></div>
+        </div>
+        <p class="note">Värdet av bilden rakt framför Jaffar: medfödd dragning plus svampkroppens inlärda värde. Till vänster om strecket undviker han den, till höger dras han dit.</p>
+        <div class="sliders">
+          <label for="pDark">Medfödd dragning mot mörkt <output id="oDark">0.50</output><input id="pDark" type="range" min="0" max="1.2" step="0.05" value="0.5"></label>
+          <label for="pLr">Inlärningstakt (dopamin) <output id="oLr">0.35</output><input id="pLr" type="range" min="0" max="1" step="0.05" value="0.35"></label>
+          <label for="pNoise">Utforskning (slump i styrningen) <output id="oNoise">1.00</output><input id="pNoise" type="range" min="0" max="2" step="0.05" value="1"></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="card about">
+    <div>
+      <h2>Hur Jaffar ser ljust och mörkt</h2>
+      <ul>
+        <li><b>Två-dimensionell syn</b>: varje öga har 18 × 7 ommatidier som täcker 170° i sidled och från 35° under till 55° över horisonten. Varje ommatidium ser en liten ruta av bilden, så han ser <i>var</i> i bilden det ljusa och det mörka sitter.</li>
+        <li><b>Ljushet som ögat upplever den</b>: pixlarna räknas om till upplevd ljushet (CIE L*) i stället för rå RGB. Mellangrått hamnar då mitt på skalan, inte nära svart.</li>
+        <li><b>Rent vitt</b> räknas bara när pixeln är ljus <i>och</i> nästan färglös. En gul eller ljusblå yta räknas som "ljus men inte vit". Det är andelen rent vitt som avgör vilken bild som ger socker.</li>
+        <li><b>Ljusanpassning</b>: fotoreceptorerna anpassar sig delvis till omgivningens ljus. Kontrast mäts mot den nivån och delas upp i ON (ljusare) och OFF (mörkare) i laminan (L1 och L2).</li>
+        <li><b>10 visuella projektionsneuroner</b> per sida mäter hur mycket ljust och mörkt som syns, hur stor yta det täcker, hur mycket som ligger framåt och hur mönstrad bilden är (kanter). De skickar det vidare till 150 Kenyonceller.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Resten av kretsen</h2>
+      <ul>
+        <li><b>APL</b> hämmar så att bara 15 Kenyonceller per sida är aktiva, alltså en gles kod.</li>
+        <li><b>PAM</b>-dopamin vid socker försvagar KC→<code>MBON-γ5β'2a</code> ("undvik") för de celler som nyss var aktiva. <b>PPL1</b> försvagar KC→<code>MBON-γ1pedc&gt;α/β</code> ("närma") när sockret uteblir.</li>
+        <li><b>DNa02</b> styr svängar och <b>P9</b> driver gången framåt.</li>
+      </ul>
+      <p>Kretsen bygger på celltyper och kopplingsmönster från FlyWire, kopplingskartan över hela flughjärnan med cirka 139 000 neuroner, men den är kraftigt nedskalad så att den kan köras i webbläsaren. Flugor dras från början mot mörka föremål, så Jaffar brukar välja fel först.</p>
+      <p>Bilder du laddar upp stannar i din webbläsare och försvinner när sidan laddas om.</p>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+const TAU = Math.PI * 2, DT = 1 / 60, D2R = Math.PI / 180;
+const wrap = a => { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss() { let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * Math.random()); }
+
+/* ============ Bildanalys ============ */
+const IMG = 128, G = 32, CELL = IMG / G;
+const lin = c => { c /= 255; return c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); };
+function lightness(r, g, b) { const Y = .2126 * lin(r) + .7152 * lin(g) + .0722 * lin(b); return Y > .008856 ? 1.16 * Math.cbrt(Y) - .16 : 9.033 * Y; }
+const CLS = { white: [255, 255, 255], light: [195, 202, 208], mid: [115, 122, 129], dark: [18, 18, 18] };
+function makeStim(name, drawFn) {
+  const c = document.createElement('canvas'); c.width = c.height = IMG;
+  const g = c.getContext('2d', { willReadFrequently: true }); drawFn(g);
+  const d = g.getImageData(0, 0, IMG, IMG).data;
+  const map = document.createElement('canvas'); map.width = map.height = IMG;
+  const mctx = map.getContext('2d'), md = mctx.createImageData(IMG, IMG);
+  const cells = new Float64Array(G * G);
+  let white = 0, light = 0, dark = 0, sum = 0;
+  for (let y = 0; y < IMG; y++) for (let x = 0; x < IMG; x++) {
+    const i = (y * IMG + x) * 4, a = d[i + 3] / 255;
+    const r = d[i] * a + 128 * (1 - a), gg = d[i + 1] * a + 128 * (1 - a), b = d[i + 2] * a + 128 * (1 - a);
+    const L = lightness(r, gg, b), chroma = (Math.max(r, gg, b) - Math.min(r, gg, b)) / 255;
+    let cls;
+    if (L > .86 && chroma < .18) { cls = CLS.white; white++; }
+    else if (L < .3) { cls = CLS.dark; dark++; }
+    else if (L > .62) { cls = CLS.light; light++; }
+    else cls = CLS.mid;
+    md.data[i] = cls[0]; md.data[i + 1] = cls[1]; md.data[i + 2] = cls[2]; md.data[i + 3] = 255;
+    cells[Math.floor(y / CELL) * G + Math.floor(x / CELL)] += L; sum += L;
+  }
+  mctx.putImageData(md, 0, 0);
+  // summerad tabell (rad 0 = bildens överkant) för snabba ruta-medelvärden
+  const sat = new Float64Array((G + 1) * (G + 1)), n = CELL * CELL;
+  for (let j = 0; j < G; j++) for (let i = 0; i < G; i++)
+    sat[(j + 1) * (G + 1) + i + 1] = cells[j * G + i] / n + sat[j * (G + 1) + i + 1] + sat[(j + 1) * (G + 1) + i] - sat[j * (G + 1) + i];
+  const N = IMG * IMG;
+  return { name, canvas: c, map, sat, white: white / N, light: light / N, dark: dark / N, mid: 1 - (white + light + dark) / N, mean: sum / N };
+}
+function boxAvg(img, u0, u1, v0, v1) {
+  const i0 = clamp(Math.floor(Math.min(u0, u1) * G), 0, G - 1), i1 = clamp(Math.ceil(Math.max(u0, u1) * G), i0 + 1, G);
+  const j0 = clamp(Math.floor(Math.min(v0, v1) * G), 0, G - 1), j1 = clamp(Math.ceil(Math.max(v0, v1) * G), j0 + 1, G);
+  const s = img.sat, W = G + 1;
+  return (s[j1 * W + i1] - s[j0 * W + i1] - s[j1 * W + i0] + s[j0 * W + i0]) / ((i1 - i0) * (j1 - j0));
+}
+const solid = (name, col) => makeStim(name, g => { g.fillStyle = col; g.fillRect(0, 0, IMG, IMG); });
+const STIM = [solid('Svart ruta', '#000'), solid('Vit ruta', '#fff')];
+let winner = 1;
+function pickWinner() { winner = (STIM[1].white > STIM[0].white || (STIM[1].white === STIM[0].white && STIM[1].mean >= STIM[0].mean)) ? 1 : 0; }
+const PANELS = [{ x: -3.5, z: 4.5, img: STIM[0] }, { x: 3.5, z: 4.5, img: STIM[1] }];
+const PH = 2;
+
+/* ============ Ögon ============ */
+const NAZ = 18, NEL = 7, NOM = NAZ * NEL, AZ = 170 * D2R, ACC_A = 6 * D2R;
+const EL0 = -35 * D2R, EL1 = 55 * D2R, ACC_E = (EL1 - EL0) / NEL / 2 * 1.15, EYE_H = .22;
+const azC = Array.from({ length: NAZ }, (_, i) => (i + .5) / NAZ * AZ);
+const elC = Array.from({ length: NEL }, (_, k) => EL0 + (k + .5) * (EL1 - EL0) / NEL);
+const frontW = azC.map(a => Math.max(0, 1 - a / (Math.PI / 2)));
+function eyeSample(fx, fz, h, panels, outL, outR) {
+  for (let s = 0; s < 2; s++) {
+    const side = s ? 1 : -1, out = s ? outR : outL;
+    for (let ai = 0; ai < NAZ; ai++) {
+      const a = side * azC[ai];
+      for (let ei = 0; ei < NEL; ei++) {
+        const el = elC[ei]; let L = .5;                         // arenans neutrala bakgrund
+        for (const p of panels) {
+          const r1 = wrap(Math.atan2(p.z - fz, p.x - 1 - fx) - h), r2 = wrap(Math.atan2(p.z - fz, p.x + 1 - fx) - h);
+          const lo = Math.min(r1, r2), hi = Math.max(r1, r2);
+          if (hi - lo > Math.PI) continue;
+          const s0 = Math.max(a - ACC_A, lo), s1 = Math.min(a + ACC_A, hi);
+          if (s1 <= s0) continue;
+          const t0 = (s0 - r1) / (r2 - r1), t1 = (s1 - r1) / (r2 - r1), tm = (t0 + t1) / 2;
+          const d = Math.max(.15, Math.hypot(p.x - 1 + 2 * tm - fx, p.z - fz));
+          const eTop = Math.atan((PH - EYE_H) / d), eBot = Math.atan(-EYE_H / d);
+          const e0 = Math.max(el - ACC_E, eBot), e1 = Math.min(el + ACC_E, eTop);
+          if (e1 <= e0) continue;
+          const cov = (s1 - s0) / (2 * ACC_A) * (e1 - e0) / (2 * ACC_E);
+          const v0 = (eTop - e1) / (eTop - eBot), v1 = (eTop - e0) / (eTop - eBot);
+          L = L * (1 - cov) + cov * boxAvg(p.img, 1 - t1, 1 - t0, v0, v1);
+        }
+        out[ai * NEL + ei] = clamp(L, 0, 1);
+      }
+    }
+  }
+}
+/* Lamina (ON/OFF) och visuella projektionsneuroner */
+const NPN = 10;
+const cL = new Float32Array(NOM), cR = new Float32Array(NOM);
+function pnPair(lumL, lumR, pnL, pnR, noise) {
+  let m = 0; for (let i = 0; i < NOM; i++) m += lumL[i] + lumR[i]; m /= 2 * NOM;
+  const bgA = .55 * .5 + .45 * m;                                           // delvis ljusanpassning
+  for (let i = 0; i < NOM; i++) { cL[i] = clamp((lumL[i] - bgA) / (bgA + .08), -1.5, 1.5); cR[i] = clamp((lumR[i] - bgA) / (bgA + .08), -1.5, 1.5); }
+  pnSide(cL, pnL, noise); pnSide(cR, pnR, noise);
+  return bgA;
+}
+function pnSide(c, out, noise) {
+  let sOn = 0, sOff = 0, xOn = 0, xOff = 0, fOn = 0, fOff = 0, aOn = 0, aOff = 0, edge = 0, fw = 0;
+  for (let ai = 0; ai < NAZ; ai++) for (let ei = 0; ei < NEL; ei++) {
+    const i = ai * NEL + ei, v = c[i], on = clamp(v, 0, 1), off = clamp(-v, 0, 1);
+    sOn += on; sOff += off; xOn = Math.max(xOn, on); xOff = Math.max(xOff, off);
+    fOn += on * frontW[ai]; fOff += off * frontW[ai]; fw += frontW[ai];
+    if (v > .3) aOn++; if (v < -.3) aOff++;
+    if (ai + 1 < NAZ) edge += Math.abs(v - c[i + NEL]);
+    if (ei + 1 < NEL) edge += Math.abs(v - c[i + 1]);
+  }
+  const sal = Math.min(1, (sOn + sOff) / NOM * 6), dom = (sOn - sOff) / (sOn + sOff + .05);
+  const f = [sOn / NOM * 5, sOff / NOM * 5, xOn * 1.3, xOff * 1.3, fOn / fw * 3.5, fOff / fw * 3.5, aOn / NOM * 5, aOff / NOM * 5, edge / NOM * 3, sal * (dom + 1) / 2];
+  for (let j = 0; j < NPN; j++) out[j] = clamp(f[j] + (noise ? .02 * gauss() : 0), 0, 1);
+}
+
+/* ============ Svampkroppen ============ */
+const NKC = 150, KWTA = 15, NIN = 4;
+const rnd = mulberry(1395);
+const kcPre = [], kcW = [];
+for (let k = 0; k < NKC; k++) { const s = new Set(); while (s.size < NIN) s.add(Math.floor(rnd() * NPN)); kcPre.push([...s]); kcW.push([...s].map(() => .5 + rnd())); }
+const P = { innateDark: .5, lr: .35, noise: 1 };
+const wAv = new Float32Array(NKC).fill(1), wAp = new Float32Array(NKC).fill(1), trace = new Float32Array(NKC);
+const _drv = new Float32Array(NKC), _srt = new Float32Array(NKC);
+function kcFrom(pn, out) {
+  for (let k = 0; k < NKC; k++) { let d = 0; const pr = kcPre[k], w = kcW[k]; for (let j = 0; j < NIN; j++) d += w[j] * pn[pr[j]]; _drv[k] = d; _srt[k] = d; }
+  _srt.sort(); const thr = _srt[NKC - KWTA];
+  for (let k = 0; k < NKC; k++) out[k] = (_drv[k] >= thr && _drv[k] > .15) ? _drv[k] : 0;
+}
+function mbon(kc) { let av = 0, ap = 0; for (let k = 0; k < NKC; k++) { av += wAv[k] * kc[k]; ap += wAp[k] * kc[k]; } return { av: av * .025, ap: ap * .025 }; }
+const innate = pn => P.innateDark * pn[3] + .25 * pn[2];
+
+/* ============ Tillstånd ============ */
+const lumL = new Float32Array(NOM), lumR = new Float32Array(NOM);
+const pnL = new Float32Array(NPN), pnR = new Float32Array(NPN);
+const kcL = new Float32Array(NKC), kcR = new Float32Array(NKC);
+const S = {
+  x: 0, z: -6, h: Math.PI / 2, omega: 0, n: 0, speed: 0, gait: 0, bgA: .5,
+  vL: 0, vR: 0, mbL: { av: 0, ap: 0 }, mbR: { av: 0, ap: 0 },
+  trial: 0, t: 0, phase: 'run', timer: 0, results: [], pam: 0, ppl: 0, rewards: 0, per: 0, chosen: null,
+  running: true, mult: 1
+};
+function newTrial() {
+  const swap = Math.random() < .5;
+  PANELS[0].img = STIM[swap ? 1 : 0]; PANELS[1].img = STIM[swap ? 0 : 1];
+  S.x = (Math.random() - .5) * 2; S.z = -6; S.h = Math.PI / 2 + (Math.random() - .5) * .9;
+  S.omega = 0; S.n = 0; S.t = 0; S.phase = 'run'; trace.fill(0); S.trial++;
+  if (window.__applyPanels) window.__applyPanels();
+}
+function endTrial(outcome, img) {
+  S.results.push(outcome); S.chosen = img;
+  let m = 0; for (let k = 0; k < NKC; k++) m = Math.max(m, trace[k]);
+  if (outcome === 'w') {
+    if (m > 0) for (let k = 0; k < NKC; k++) wAv[k] = Math.max(0, wAv[k] - P.lr * trace[k] / m);
+    S.pam = 1; S.rewards++; S.phase = 'reward'; S.timer = 1.8;
+  } else if (outcome === 'b') {
+    if (m > 0) for (let k = 0; k < NKC; k++) wAp[k] = Math.max(0, wAp[k] - P.lr * .5 * trace[k] / m);
+    S.ppl = 1; S.phase = 'omission'; S.timer = 1.1;
+  } else { S.phase = 'timeout'; S.timer = .6; }
+  updateStats();
+}
+function step(dt) {
+  S.pam = Math.max(0, S.pam - dt * .8); S.ppl = Math.max(0, S.ppl - dt * .9);
+  eyeSample(S.x, S.z, S.h, PANELS, lumL, lumR);
+  S.bgA = pnPair(lumL, lumR, pnL, pnR, true);
+  kcFrom(pnL, kcL); kcFrom(pnR, kcR);
+  S.mbL = mbon(kcL); S.mbR = mbon(kcR);
+  S.vL = innate(pnL) + S.mbL.ap - S.mbL.av; S.vR = innate(pnR) + S.mbR.ap - S.mbR.av;
+  if (S.phase !== 'run') {
+    S.speed = 0; S.omega *= .9;
+    S.per = S.phase === 'reward' ? Math.min(1, S.per + dt * 4) : Math.max(0, S.per - dt * 3);
+    S.timer -= dt; if (S.timer <= 0) { S.per = 0; newTrial(); }
+    return;
+  }
+  S.per = Math.max(0, S.per - dt * 3);
+  const decay = Math.exp(-dt / 1.2);
+  for (let k = 0; k < NKC; k++) trace[k] = trace[k] * decay + dt * (kcL[k] + kcR[k]);
+  S.n += -S.n * 1.5 * dt + P.noise * 1.6 * Math.sqrt(dt) * gauss();
+  let target = 2.2 * (S.vR - S.vL) + S.n;
+  const r = Math.hypot(S.x, S.z);
+  if (r > 7.4) { const rel = wrap(Math.atan2(-S.z, -S.x) - S.h); target += 5 * (r - 7.4) * Math.sign(rel); }
+  S.omega += (target - S.omega) * Math.min(1, dt * 6); S.omega = clamp(S.omega, -4, 4);
+  S.h = wrap(S.h + S.omega * dt);
+  S.speed = 1.5 * (1 - .3 * Math.min(1, Math.abs(S.omega) / 3));
+  S.x += Math.cos(S.h) * S.speed * dt; S.z += Math.sin(S.h) * S.speed * dt;
+  const r2 = Math.hypot(S.x, S.z); if (r2 > 8.4) { S.x *= 8.4 / r2; S.z *= 8.4 / r2; }
+  S.gait += S.speed * dt * 11; S.t += dt;
+  for (const p of PANELS) if (Math.abs(S.x - p.x) < 1.15 && Math.abs(S.z - (p.z - .35)) < .7) { endTrial(p.img === STIM[winner] ? 'w' : 'b', p.img); return; }
+  if (S.t > 25) endTrial('n', null);
+}
+const _pl = new Float32Array(NOM), _pr = new Float32Array(NOM), _pa = new Float32Array(NPN), _pb = new Float32Array(NPN), _kc = new Float32Array(NKC);
+function probe(img) {
+  eyeSample(0, 0, Math.PI / 2, [{ x: 0, z: 4, img }], _pl, _pr);
+  pnPair(_pl, _pr, _pa, _pb, false); kcFrom(_pa, _kc); const m = mbon(_kc);
+  return innate(_pa) + m.ap - m.av;
+}
+
+/* ============ 3D ============ */
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ canvas: view, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xc9d0d4);
+const camera = new THREE.PerspectiveCamera(45, 1, .05, 200);
+const controls = new THREE.OrbitControls(camera, view);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * .49;
+scene.add(new THREE.HemisphereLight(0xf2f5f7, 0x6b7478, .75));
+const sun = new THREE.DirectionalLight(0xffffff, .8);
+sun.position.set(-6, 14, -4); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10 }); scene.add(sun);
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
+
+const floor = new THREE.Mesh(new THREE.CircleGeometry(9, 96), new THREE.MeshStandardMaterial({ color: 0x9aa2a6, roughness: .95 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+for (const rr of [3, 6]) { const ring = new THREE.Mesh(new THREE.RingGeometry(rr - .02, rr + .02, 128), new THREE.MeshBasicMaterial({ color: 0x8c9498 })); ring.rotation.x = -Math.PI / 2; ring.position.y = .002; scene.add(ring); }
+const wall = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 1.1, 96, 1, true), new THREE.MeshStandardMaterial({ color: 0x858e93, side: THREE.BackSide, roughness: .9 }));
+wall.position.y = .55; wall.receiveShadow = true; scene.add(wall);
+
+const edgeMat = new THREE.MeshStandardMaterial({ color: 0x3a4044, roughness: .8 });
+const matCache = new Map();
+function faceMat(img) {
+  if (!matCache.has(img)) { const tex = new THREE.CanvasTexture(img.canvas); tex.encoding = THREE.sRGBEncoding; matCache.set(img, new THREE.MeshStandardMaterial({ map: tex, roughness: .7, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .22 })); }
+  return matCache.get(img);
+}
+const panelMeshes = PANELS.map(p => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(2, PH, .12), [edgeMat, edgeMat, edgeMat, edgeMat, edgeMat, edgeMat]);
+  m.position.set(p.x, PH / 2, p.z); m.castShadow = true; scene.add(m);
+  const zone = new THREE.Mesh(new THREE.RingGeometry(.85, .95, 48), new THREE.MeshBasicMaterial({ color: 0x7d868b }));
+  zone.rotation.x = -Math.PI / 2; zone.position.set(p.x, .004, p.z - .9); scene.add(zone);
+  return m;
+});
+const sugar = new THREE.Mesh(new THREE.SphereGeometry(.22, 24, 16), new THREE.MeshPhysicalMaterial({ color: 0xe8a23a, transparent: true, opacity: .85, roughness: .1, transmission: .3 }));
+sugar.scale.set(1, .6, 1); sugar.visible = false; scene.add(sugar);
+window.__applyPanels = () => {
+  PANELS.forEach((p, i) => { const mats = panelMeshes[i].material; mats[5] = faceMat(p.img); mats[4] = faceMat(p.img); });
+  const w = PANELS.find(p => p.img === STIM[winner]); sugar.position.set(w.x, .12, w.z - .55);
+};
+
+/* Flugmodell: anatomiskt detaljerad Drosophila */
+const mBody = new THREE.MeshStandardMaterial({ color: 0x8a7255, roughness: .62 });
+const mThor = new THREE.MeshStandardMaterial({ map: canvasTex(128, 64, (g, w, h) => {
+  g.fillStyle = '#8a7255'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${60 + rnd() * 40},${45 + rnd() * 30},${30 + rnd() * 20},.35)`; g.fillRect(rnd() * w, rnd() * h, 1, 1); }
+  g.fillStyle = 'rgba(70,52,34,.35)'; for (const x of [.22, .44, .56, .78]) g.fillRect(x * w - 2, 0, 4, h);
+}), roughness: .55 });
+const mDark = new THREE.MeshStandardMaterial({ color: 0x2b2117, roughness: .55 });
+const mLeg = new THREE.MeshStandardMaterial({ color: 0x6d5a42, roughness: .6 });
+const mBristle = new THREE.MeshStandardMaterial({ color: 0x1c140c, roughness: .5 });
+const mEyeBase = new THREE.MeshStandardMaterial({ color: 0x5e0a10, roughness: .5 });
+const mFacet = new THREE.MeshStandardMaterial({ color: 0xc0242c, roughness: .22, metalness: .08, emissive: 0x2a0204 });
+const mOcell = new THREE.MeshStandardMaterial({ color: 0xd9a24a, roughness: .1, metalness: .3, emissive: 0x3a2200 });
+const mLabel = new THREE.MeshStandardMaterial({ color: 0xa88a64, roughness: .5 });
+function abdTexFor(male) {
+  return canvasTex(8, 256, (g, w, h) => {
+    g.fillStyle = '#c3a172'; g.fillRect(0, 0, w, h);
+    // canvas överst = bakkroppens spets
+    const segs = 6;
+    for (let i = 0; i < segs; i++) {
+      const y0 = h - (i + 1) * h / segs, sh = h / segs;
+      g.fillStyle = '#3a2a1a'; g.fillRect(0, y0, w, sh * (.35 + i * .06));
+    }
+    if (male) { g.fillStyle = '#2a1d11'; g.fillRect(0, 0, w, h * .36); }
+    g.fillStyle = 'rgba(255,240,210,.18)'; g.fillRect(0, h - 10, w, 10);
+  });
+}
+const wingTex = canvasTex(512, 192, g => {
+  // vinge: bas till höger, spets till vänster
+  const P = new Path2D();
+  P.moveTo(506, 92); P.bezierCurveTo(470, 60, 380, 30, 230, 22); P.bezierCurveTo(90, 16, 10, 50, 8, 96);
+  P.bezierCurveTo(10, 140, 90, 172, 220, 168); P.bezierCurveTo(360, 164, 460, 130, 506, 100); P.closePath();
+  g.fillStyle = 'rgba(210,226,238,.38)'; g.fill(P);
+  const irid = g.createLinearGradient(0, 20, 0, 170); irid.addColorStop(0, 'rgba(255,200,230,.10)'); irid.addColorStop(.5, 'rgba(180,230,255,.10)'); irid.addColorStop(1, 'rgba(210,255,200,.10)');
+  g.fillStyle = irid; g.fill(P);
+  g.strokeStyle = 'rgba(92,72,48,.85)'; g.lineWidth = 3; g.stroke(P);
+  const vein = (w, pts) => { g.lineWidth = w; g.beginPath(); g.moveTo(...pts[0]); for (let i = 1; i < pts.length; i += 3) g.bezierCurveTo(...pts[i], ...pts[i + 1], ...pts[i + 2]); g.stroke(); };
+  g.strokeStyle = 'rgba(92,72,48,.9)';
+  vein(4, [[506, 90], [440, 58], [330, 32], [230, 23]]);                          // costa
+  vein(2.4, [[500, 92], [440, 76], [360, 58], [300, 50]]);                        // L1
+  vein(2.2, [[495, 94], [380, 70], [200, 44], [60, 58]]);                         // L2
+  vein(2.2, [[495, 96], [360, 86], [180, 84], [10, 96]]);                         // L3
+  vein(2.2, [[495, 100], [360, 108], [180, 124], [40, 142]]);                     // L4
+  vein(2.2, [[492, 104], [400, 128], [300, 150], [190, 167]]);                    // L5
+  vein(1.8, [[488, 106], [470, 130], [450, 148], [430, 158]]);                    // L6
+  vein(2, [[262, 86], [262, 94], [262, 104], [262, 113]]);                        // främre tvärådra
+  vein(2, [[176, 125], [174, 136], [172, 148], [170, 158]]);                      // bakre tvärådra
+  g.fillStyle = 'rgba(92,72,48,.5)'; for (let i = 0; i < 90; i++) { const x = 30 + rnd() * 440; g.fillRect(x, 26 + rnd() * 3, 1, 2); }
+});
+const mWing = new THREE.MeshStandardMaterial({ map: wingTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: .15, metalness: .15 });
+
+function seg(a, b, r, mat, r2) {
+  const d = new THREE.Vector3().subVectors(b, a), len = d.length();
+  const g = new THREE.CylinderGeometry(r2 != null ? r2 : r * .8, r, len, 8); g.translate(0, len / 2, 0);
+  const m = new THREE.Mesh(g, mat); m.position.copy(a); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); m.castShadow = true; return m;
+}
+function blob(r, sx, sy, sz, pos, mat, ws = 28, hs = 18) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs), mat); m.scale.set(sx, sy, sz); m.position.set(...pos); m.castShadow = true; return m; }
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const UP = V(0, 1, 0);
+
+// borst som instansierade koner
+const bristleGeo = new THREE.ConeGeometry(.009, 1, 5); bristleGeo.translate(0, .5, 0);
+function bristles(list) {
+  const im = new THREE.InstancedMesh(bristleGeo, mBristle, list.length), M = new THREE.Matrix4(), q = new THREE.Quaternion();
+  list.forEach(([p, dir, len], i) => { q.setFromUnitVectors(UP, dir.clone().normalize()); M.compose(p, q, V(1, len, 1)); im.setMatrixAt(i, M); });
+  return im;
+}
+function onEllipsoid(c, r, x, z, top = 1) { const t = 1 - (x * x) / (r.x * r.x) - (z * z) / (r.z * r.z); return V(c.x + x, c.y + top * r.y * Math.sqrt(Math.max(0, t)), c.z + z); }
+
+// facettöga: ~350 ommatidier som små kupoler
+const facetGeo = new THREE.SphereGeometry(.0145, 6, 4, 0, TAU, 0, Math.PI / 2);
+function compoundEye(c, r, s) {
+  const out = V(.42, .08, s * .9).normalize(), pts = [], N = 900, M = new THREE.Matrix4(), q = new THREE.Quaternion();
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (i + .5) / N * 2, rad = Math.sqrt(1 - y * y), th = i * 2.399963;
+    const u = V(Math.cos(th) * rad, y, Math.sin(th) * rad);
+    if (u.dot(out) < .05) continue;
+    const p = V(c.x + u.x * r.x, c.y + u.y * r.y, c.z + u.z * r.z);
+    const n = V(u.x / r.x, u.y / r.y, u.z / r.z).normalize();
+    pts.push([p, n]);
+  }
+  const im = new THREE.InstancedMesh(facetGeo, mFacet, pts.length);
+  pts.forEach(([p, n], i) => { q.setFromUnitVectors(UP, n); M.compose(p, q, V(1, .75, 1)); im.setMatrixAt(i, M); });
+  const g = new THREE.Group();
+  g.add(blob(1, r.x * .97, r.y * .97, r.z * .97, [c.x, c.y, c.z], mEyeBase, 24, 16)); g.add(im);
+  return g;
+}
+
+function buildFly(f) {
+  const male = f.sex === 'm';
+  const fly = new THREE.Group(), inner = new THREE.Group(); fly.add(inner);
+  const B = [];                                                            // borstlista
+  // mellankropp (thorax) och scutellum
+  const tc = V(0, .56, 0), tr = V(.34, .27, .27);
+  inner.add(blob(1, tr.x, tr.y, tr.z, [tc.x, tc.y, tc.z], mThor, 32, 22));
+  inner.add(blob(.2, 1, .45, .9, [-.3, .76, 0], mThor));
+  for (const [x, z] of [[.18, .08], [.05, .1], [-.08, .11], [-.18, .1], [.12, .2], [-.05, .21], [.22, .17]]) for (const s of [-1, 1])
+    B.push([onEllipsoid(tc, tr, x, s * z), V(-.9, .45, s * .12), .16 + rnd() * .05]);
+  for (const s of [-1, 1]) { B.push([V(-.4, .8, s * .07), V(-.9, .35, s * .15), .22]); B.push([V(-.36, .79, s * .15), V(-.8, .3, s * .4), .18]); }
+  // bakkropp (abdomen) som svarvad form
+  const prof = [], L = male ? .88 : 1.08;
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24, y = t * L;
+    let r = male ? .3 * Math.pow(Math.sin(Math.PI * Math.min(1, t * .92 + .08)), .6) : .31 * Math.pow(Math.sin(Math.PI * (t * .95 + .05)), .75);
+    if (!male && t > .9) r *= 1 - (t - .9) * 5;
+    prof.push(new THREE.Vector2(Math.max(.004, r), y));
+  }
+  const ag = new THREE.LatheGeometry(prof, 32); ag.rotateZ(Math.PI / 2);
+  const abd = new THREE.Mesh(ag, new THREE.MeshStandardMaterial({ map: abdTexFor(male), roughness: .5 }));
+  abd.scale.set(1, .86, 1.05); abd.position.set(-.28, .5, 0); abd.rotation.z = .08; abd.castShadow = true; inner.add(abd);
+  for (let i = 0; i < 10; i++) { const t = .15 + i * .07; B.push([V(-.28 - t * L, .5 + .24 * Math.sin(Math.PI * t), (i % 2 ? .06 : -.06)), V(-1, .3, (i % 2 ? .2 : -.2)), .06]); }
+  // huvud
+  const hc = V(.52, .62, 0);
+  inner.add(blob(.3, .62, .86, 1.0, [hc.x, hc.y, hc.z], mBody));
+  inner.add(blob(.12, .9, .6, 1.3, [.66, .56, 0], mLabel));                         // ansikte
+  for (const s of [-1, 1]) inner.add(compoundEye(V(.57, .66, s * .2), V(.18, .26, .15), s));
+  for (const [x, z] of [[.5, 0], [.45, .045], [.45, -.045]]) inner.add(blob(.022, 1, .7, 1, [x, .9, z], mOcell, 12, 8));
+  for (const s of [-1, 1]) {
+    B.push([V(.5, .9, s * .13), V(-.5, .7, s * .5), .16]); B.push([V(.58, .88, s * .11), V(.3, .8, s * .4), .12]);
+    B.push([V(.44, .88, s * .06), V(-.6, .8, s * .1), .14]); B.push([V(.62, .86, s * .07), V(.6, .6, s * .15), .1]);
+  }
+  // antenner: scape, pedicel, funiculus och fjäderlik arista
+  for (const s of [-1, 1]) {
+    const a0 = V(.74, .7, s * .05), a1 = V(.79, .74, s * .07), a2 = V(.83, .78, s * .09);
+    inner.add(seg(a0, a1, .022, mLabel)); inner.add(seg(a1, a2, .026, mBody));
+    const fun = blob(.05, .8, 1.3, .8, [.85, .72, s * .1], mBody); inner.add(fun);
+    const ar0 = V(.87, .78, s * .12), ar1 = V(1.0, .95, s * .2);
+    inner.add(seg(ar0, ar1, .006, mBristle, .002));
+    for (let k = 1; k <= 5; k++) { const p = ar0.clone().lerp(ar1, k / 6); B.push([p, V(.2, .9, 0), .05]); B.push([p, V(.4, -.6, 0), .035]); }
+  }
+  // snabel: rostrum, haustellum, labellum med två lober
+  const prob = new THREE.Group(); prob.position.set(.62, .42, 0); inner.add(prob);
+  prob.add(seg(V(0, 0, 0), V(.04, -.18, 0), .045, mLabel, .035));
+  prob.add(seg(V(.04, -.18, 0), V(.1, -.32, 0), .033, mLabel, .028));
+  for (const s of [-1, 1]) prob.add(blob(.05, 1.3, .55, .9, [.11, -.34, s * .035], mLabel, 12, 8));
+  prob.scale.y = .25;
+  // vingar
+  const wings = [];
+  for (const s of [-1, 1]) {
+    const wg = new THREE.Group(); wg.position.set(-.05, .8, s * .13);
+    const pg = new THREE.PlaneGeometry(1.62, .61); pg.translate(-.81, 0, 0); pg.rotateX(-Math.PI / 2);
+    if (s < 0) { const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i)); }
+    wg.add(new THREE.Mesh(pg, mWing)); wg.rotation.set(0, s * .26, -.07); wg.userData.s = s; inner.add(wg); wings.push(wg);
+  }
+  // svängkolvar (halteres)
+  for (const s of [-1, 1]) { inner.add(seg(V(-.2, .64, s * .24), V(-.3, .76, s * .34), .012, mLabel)); inner.add(blob(.04, 1, .8, 1, [-.31, .77, s * .345], mLabel, 12, 8)); }
+  // ben: coxa, femur, tibia, fem tarsleder och klor
+  const legs = [];
+  [[.2, .55], [.02, 0], [-.16, -.6]].forEach(([ax, dirx], row) => {
+    for (const s of [-1, 1]) {
+      const g = new THREE.Group(); g.position.set(ax, .4, s * .17);
+      const A = V(0, 0, 0), C = V(dirx * .1, -.08, s * .13), K = V(dirx * .45, .24, s * .5), Tb = V(dirx * .88, -.36, s * .86), T5 = V(dirx * 1.18, -.41, s * 1.08);
+      g.add(seg(A, C, .06, mLeg, .05)); g.add(blob(.05, 1, 1, 1, [C.x, C.y, C.z], mLeg, 10, 8));
+      g.add(seg(C, K, .048, mLeg, .036)); g.add(blob(.034, 1, 1, 1, [K.x, K.y, K.z], mLeg, 10, 8));
+      g.add(seg(K, Tb, .03, mLeg, .024));
+      let prev = Tb;
+      for (let t = 1; t <= 5; t++) { const p = Tb.clone().lerp(T5, t / 5); p.y = Tb.y + (T5.y - Tb.y) * Math.sqrt(t / 5); g.add(seg(prev, p, .02 - t * .0015, mDark, .017 - t * .0015)); prev = p; }
+      for (const c of [-1, 1]) g.add(seg(T5, V(T5.x + dirx * .04 + .01, T5.y - .01, T5.z + c * .03), .008, mBristle, .001));
+      const LB = [];
+      for (let k = 1; k <= 3; k++) { const p = C.clone().lerp(K, k / 4); LB.push([p, V(dirx * .4 - .2, .6, s * .7), .06]); }
+      for (let k = 1; k <= 3; k++) { const p = K.clone().lerp(Tb, k / 4); LB.push([p, V(dirx * .3, .3, s * .8), .05]); }
+      if (male && row === 0) {                                              // könskam, bara hanar
+        const p = Tb.clone().lerp(T5, .12);
+        for (let k = 0; k < 7; k++) { const q = p.clone(); q.x += (k - 3) * .006; g.add(seg(q, V(q.x, q.y - .045, q.z - s * .02), .006, mBristle, .003)); }
+      }
+      g.add(bristles(LB));
+      g.userData = { s, row, grp: (row + (s > 0 ? 1 : 0)) % 2 }; inner.add(g); legs.push(g);
+    }
+  });
+  inner.add(bristles(B));
+  fly.scale.setScalar(.34); fly.userData.flyIdx = f.i; scene.add(fly);
+  // namnskylt
+  const tagTex = canvasTex(256, 80, () => {});
+  const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: tagTex, transparent: true, depthWrite: false }));
+  tag.scale.set(.95, .3, 1); tag.renderOrder = 5; scene.add(tag);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.4, .48, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 }));
+  ring.rotation.x = -Math.PI / 2; scene.add(ring);
+  f.m = { fly, inner, prob, wings, legs, tag, tagTex, ring };
+}
+
+const JAFFAR = { i: 0, sex: 'm', name: 'Jaffar' };
+buildFly(JAFFAR);
+const M = JAFFAR.m;
+function paintTag() {
+  const c = M.tagTex.image, g = c.getContext('2d'); g.clearRect(0, 0, 256, 80);
+  g.font = '600 36px "Bricolage Grotesque", "Segoe UI", sans-serif';
+  const tw = g.measureText('Jaffar').width + 40, x = (256 - tw) / 2;
+  g.fillStyle = '#c47a06'; g.beginPath(); g.moveTo(x + 28, 10); g.arcTo(x + tw, 10, x + tw, 66, 28); g.arcTo(x + tw, 66, x, 66, 28); g.arcTo(x, 66, x, 10, 28); g.arcTo(x, 10, x + tw, 10, 28); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Jaffar', 128, 40);
+  M.tagTex.needsUpdate = true; M.ring.visible = false;
+}
+paintTag(); if (document.fonts) document.fonts.ready.then(paintTag);
+function updateFlyMesh(now) {
+  M.fly.position.set(S.x, 0, S.z); M.fly.rotation.y = -S.h;
+  for (const g of M.legs) {
+    const { s, grp } = g.userData, ph = S.gait + grp * Math.PI, mv = S.speed > .05 ? 1 : 0;
+    g.rotation.set(-s * mv * Math.max(0, Math.cos(ph)) * .18, mv * Math.sin(ph) * .32, 0);
+  }
+  const buzz = S.phase === 'reward' ? Math.sin(now * .09) * .22 : 0;
+  for (const w of M.wings) { w.rotation.x = w.userData.s * buzz; w.rotation.y = w.userData.s * .26; }
+  M.prob.scale.y = .25 + .75 * S.per;
+  M.inner.position.y = S.speed > .05 ? Math.abs(Math.sin(S.gait)) * .02 : 0;
+  M.tag.position.set(S.x, .62, S.z);
+  sugar.visible = S.phase === 'reward';
+  if (sugar.visible) sugar.scale.set(1 - S.per * .5, .6 - S.per * .3, 1 - S.per * .5);
+}
+
+let camMode = 'arena';
+const lastFly = new THREE.Vector3();
+function setCam(mode) {
+  camMode = mode;
+  document.querySelectorAll('#cam button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === mode));
+  if (mode === 'arena') { controls.enabled = true; camera.position.set(0, 13, -15); controls.target.set(0, 0, 1); controls.minDistance = 3; controls.maxDistance = 40; }
+  if (mode === 'follow') controls.enabled = false;
+  if (mode === 'model') { controls.enabled = true; controls.minDistance = .4; controls.maxDistance = 6; controls.target.set(S.x, .2, S.z); camera.position.set(S.x + Math.cos(S.h + 1.1) * 1.4, .75, S.z + Math.sin(S.h + 1.1) * 1.4); }
+  lastFly.set(S.x, .2, S.z);
+}
+function updateCamera() {
+  const fp = new THREE.Vector3(S.x, .2, S.z);
+  if (camMode === 'follow') { camera.position.lerp(new THREE.Vector3(S.x - Math.cos(S.h) * 2.6, 1.3, S.z - Math.sin(S.h) * 2.6), .08); camera.lookAt(S.x + Math.cos(S.h) * 2, .3, S.z + Math.sin(S.h) * 2); }
+  else if (camMode === 'model') { camera.position.add(fp.clone().sub(lastFly)); controls.target.copy(fp); controls.update(); }
+  else controls.update();
+  lastFly.copy(fp);
+}
+
+/* ============ 2D ============ */
+let css = {};
+function readCss() { const st = getComputedStyle(document.documentElement); for (const k of ['ink', 'muted', 'line', 'panel', 'soft', 'accent', 'neuron', 'neg', 'wire']) css[k] = st.getPropertyValue('--' + k).trim(); }
+readCss();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readCss);
+new MutationObserver(readCss).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+function fitCanvas(c) { const r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio, 2); const w = Math.round(r.width * d), h = Math.round(r.height * d); if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); return [g, r.width, r.height]; }
+function hexA(col, a) { if (col && col.startsWith('#')) { const n = parseInt(col.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; } return col; }
+
+const eyecv = document.getElementById('eyecv');
+function drawEyes() {
+  const [g, W, H] = fitCanvas(eyecv); g.clearRect(0, 0, W, H);
+  const cols = NAZ * 2, cw = W / cols, rh = H / NEL;
+  for (let j = 0; j < cols; j++) {
+    const left = j < NAZ, ai = left ? NAZ - 1 - j : j - NAZ, arr = left ? lumL : lumR;
+    for (let ei = 0; ei < NEL; ei++) {
+      const v = arr[ai * NEL + ei], c = Math.round(v * 255), y = (NEL - 1 - ei) * rh, x = j * cw + (ei % 2 ? cw / 2 : 0) - cw / 4;
+      g.fillStyle = `rgb(${c},${c},${c})`;
+      const hw = cw * .96, hh = rh * .96;
+      g.beginPath(); g.moveTo(x + hw * .25, y); g.lineTo(x + hw * .75, y); g.lineTo(x + hw, y + hh / 2); g.lineTo(x + hw * .75, y + hh); g.lineTo(x + hw * .25, y + hh); g.lineTo(x, y + hh / 2); g.closePath(); g.fill();
+    }
+  }
+  const hy = H - (0 - EL0) / (EL1 - EL0) * H;                               // horisonten
+  g.strokeStyle = 'rgba(232,162,58,.7)'; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(0, hy); g.lineTo(W, hy); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#e8a23a'; g.fillRect(W / 2 - 1, 0, 2, H);
+}
+
+const brain = document.getElementById('brain');
+function node(g, x, y, r, act, col, label) {
+  g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = css.soft; g.fill();
+  g.fillStyle = hexA(col, clamp(act, 0, 1)); g.fill(); g.strokeStyle = css.line; g.lineWidth = 1; g.stroke();
+  if (label) { g.fillStyle = css.muted; g.textAlign = 'center'; g.fillText(label, x, y + r + 11); }
+}
+function drawBrain() {
+  const [g, W, H] = fitCanvas(brain); g.clearRect(0, 0, W, H);
+  g.font = '10px "IBM Plex Mono", monospace';
+  const cols = [.04, .17, .31, .54, .76, .93].map(f => f * W), halfH = (H - 34) / 2, top = 26;
+  g.fillStyle = css.muted; g.textAlign = 'center';
+  ['R1–6', 'L1/L2', 'VPN', 'Kenyonceller', 'MBON', 'DN'].forEach((t, i) => g.fillText(t, cols[i], 12));
+  const hs = [{ lum: lumL, pn: pnL, kc: kcL, mb: S.mbL, y0: top, h: 0 }, { lum: lumR, pn: pnR, kc: kcR, mb: S.mbR, y0: top + halfH + 8, h: 1 }];
+  const mbPos = [];
+  for (const hm of hs) {
+    const y0 = hm.y0, hh = halfH;
+    const oy = i => y0 + 6 + i * (hh - 12) / (NAZ - 1);
+    let on = 0, off = 0;
+    for (let ai = 0; ai < NAZ; ai++) {
+      let m = 0; for (let ei = 0; ei < NEL; ei++) { const v = hm.lum[ai * NEL + ei]; m += v; on += Math.max(0, v - S.bgA); off += Math.max(0, S.bgA - v); }
+      const c = Math.round(m / NEL * 255); g.fillStyle = `rgb(${c},${c},${c})`; g.fillRect(cols[0] - 5, oy(ai) - 3, 10, 6); g.strokeStyle = css.line; g.strokeRect(cols[0] - 5, oy(ai) - 3, 10, 6);
+    }
+    const l1y = y0 + hh * .32, l2y = y0 + hh * .68;
+    g.strokeStyle = css.wire;
+    for (let i = 0; i < NAZ; i += 2) { g.beginPath(); g.moveTo(cols[0] + 5, oy(i)); g.lineTo(cols[1] - 7, l1y); g.moveTo(cols[0] + 5, oy(i)); g.lineTo(cols[1] - 7, l2y); g.stroke(); }
+    const py = j => y0 + 8 + j * (hh - 16) / (NPN - 1);
+    for (let j = 0; j < NPN; j++) { g.beginPath(); g.moveTo(cols[1] + 7, j % 2 ? l2y : l1y); g.lineTo(cols[2] - 5, py(j)); g.stroke(); }
+    const gw = Math.min(140, W * .22), gx0 = cols[3] - gw / 2, rows = 10, perRow = NKC / rows;
+    const kx = k => gx0 + (k % perRow) * gw / (perRow - 1), ky = k => y0 + 8 + Math.floor(k / perRow) * (hh - 16) / (rows - 1);
+    for (let j = 0; j < NPN; j++) { g.beginPath(); g.moveTo(cols[2] + 5, py(j)); g.lineTo(gx0 - 6, y0 + hh / 2); g.stroke(); }
+    const mbAp = [cols[4], y0 + hh * .3], mbAv = [cols[4], y0 + hh * .7];
+    g.beginPath(); g.moveTo(gx0 + gw + 6, y0 + hh / 2); g.lineTo(mbAp[0] - 9, mbAp[1]); g.moveTo(gx0 + gw + 6, y0 + hh / 2); g.lineTo(mbAv[0] - 9, mbAv[1]); g.stroke();
+    node(g, cols[1], l1y, 7, on / NOM * 6, css.neuron, 'L1');
+    node(g, cols[1], l2y, 7, off / NOM * 6, css.neuron, 'L2');
+    for (let j = 0; j < NPN; j++) node(g, cols[2], py(j), 4.5, hm.pn[j], css.neuron);
+    let mx = .001; for (let k = 0; k < NKC; k++) mx = Math.max(mx, hm.kc[k]);
+    for (let k = 0; k < NKC; k++) {
+      g.fillStyle = css.soft; g.fillRect(kx(k) - 2.5, ky(k) - 2.5, 5, 5);
+      if (hm.kc[k] > 0) { g.fillStyle = hexA(css.neuron, .35 + .65 * hm.kc[k] / mx); g.fillRect(kx(k) - 2.5, ky(k) - 2.5, 5, 5); }
+      if (wAv[k] < .6) { g.strokeStyle = hexA(css.accent, 1 - wAv[k]); g.strokeRect(kx(k) - 3.5, ky(k) - 3.5, 7, 7); }
+      if (wAp[k] < .6) { g.strokeStyle = hexA(css.neg, 1 - wAp[k]); g.strokeRect(kx(k) - 3.5, ky(k) - 3.5, 7, 7); }
+    }
+    g.fillStyle = css.muted; g.textAlign = 'center'; g.fillText('APL', gx0 + gw / 2, y0 + hh + 1);
+    node(g, mbAp[0], mbAp[1], 8, hm.mb.ap * .6, css.neuron, 'närma');
+    node(g, mbAv[0], mbAv[1], 8, hm.mb.av * .6, css.neg, 'undvik');
+    mbPos.push({ ap: mbAp, av: mbAv });
+    g.fillStyle = css.muted; g.textAlign = 'left'; g.fillText(hm.h ? 'höger' : 'vänster', 2, y0);
+  }
+  const dy = top + halfH + 4;
+  node(g, cols[4] - 26, dy, 7, S.pam, css.accent); node(g, cols[4] + 26, dy, 7, S.ppl, css.neg);
+  g.fillStyle = css.muted; g.textAlign = 'center'; g.fillText('PAM', cols[4] - 26, dy - 10); g.fillText('PPL1', cols[4] + 26, dy - 10);
+  if (S.pam > .05) { g.strokeStyle = hexA(css.accent, S.pam); g.lineWidth = 1.5; for (const m of mbPos) { g.beginPath(); g.moveTo(cols[4] - 26, dy); g.lineTo(m.av[0] - 8, m.av[1]); g.stroke(); } }
+  if (S.ppl > .05) { g.strokeStyle = hexA(css.neg, S.ppl); g.lineWidth = 1.5; for (const m of mbPos) { g.beginPath(); g.moveTo(cols[4] + 26, dy); g.lineTo(m.ap[0] + 8, m.ap[1]); g.stroke(); } }
+  g.lineWidth = 1; g.strokeStyle = css.wire;
+  for (const m of mbPos) for (const y of [top + halfH * .5, top + halfH + 8 + halfH * .5, dy]) { g.beginPath(); g.moveTo(cols[4] + 9, m.ap[1]); g.lineTo(cols[5] - 8, y); g.stroke(); }
+  node(g, cols[5], top + halfH * .5, 8, Math.max(0, -S.omega) / 3, css.neuron, 'DNa02');
+  node(g, cols[5], dy, 8, S.speed / 1.5, css.neuron, 'P9');
+  node(g, cols[5], top + halfH + 8 + halfH * .5, 8, Math.max(0, S.omega) / 3, css.neuron, 'DNa02');
+}
+
+const chart = document.getElementById('chart');
+function drawChart() {
+  const [g, W, H] = fitCanvas(chart); g.clearRect(0, 0, W, H);
+  const res = S.results, n = Math.max(30, res.length);
+  const L = 34, R = 8, T = 22, B = 18, ph = H - T - B, X = i => L + (i + .5) * (W - L - R) / n;
+  g.font = '10px "IBM Plex Mono", monospace'; g.fillStyle = css.muted; g.textAlign = 'right';
+  for (const v of [0, 50, 100]) { const y = T + ph * (1 - v / 100); g.fillText(v + '%', L - 6, y + 3); g.strokeStyle = v === 50 ? css.line : css.wire; g.setLineDash(v === 50 ? [3, 3] : []); g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke(); }
+  g.setLineDash([]); g.textAlign = 'center'; g.fillText('försök ' + n, W - R - 20, H - 4); g.fillText('1', X(0), H - 4);
+  const r = Math.min(4, (W - L - R) / n / 2 - .5);
+  res.forEach((o, i) => { g.beginPath(); g.arc(X(i), 9, Math.max(1.5, r), 0, TAU); if (o === 'w') { g.fillStyle = '#f4f4ef'; g.fill(); g.strokeStyle = '#777'; g.stroke(); } else if (o === 'b') { g.fillStyle = '#111'; g.fill(); } else { g.strokeStyle = '#888'; g.stroke(); } });
+  if (res.length) {
+    g.strokeStyle = css.neuron; g.lineWidth = 2; g.beginPath();
+    res.forEach((o, i) => { const w = res.slice(Math.max(0, i - 9), i + 1), p = w.filter(x => x === 'w').length / w.length, y = T + ph * (1 - p); i ? g.lineTo(X(i), y) : g.moveTo(X(i), y); });
+    g.stroke(); g.lineWidth = 1;
+    const last = res.length - 1, w = res.slice(Math.max(0, last - 9)), p = w.filter(x => x === 'w').length / w.length;
+    g.fillStyle = css.neuron; g.beginPath(); g.arc(X(last), T + ph * (1 - p), 3.5, 0, TAU); g.fill();
+  }
+}
+
+const bA = document.getElementById('bA'), bB = document.getElementById('bB'), nA = document.getElementById('nA'), nB = document.getElementById('nB');
+function setBar(el, num, v) { const f = clamp(v / 2, -1, 1) * 50; el.style.left = (f >= 0 ? 50 : 50 + f) + '%'; el.style.width = Math.abs(f) + '%'; el.style.background = v >= 0 ? 'var(--neuron)' : 'var(--neg)'; num.textContent = (v >= 0 ? '+' : '') + v.toFixed(2); }
+function updateVals() { setBar(bA, nA, probe(STIM[0])); setBar(bB, nB, probe(STIM[1])); }
+const statusEl = document.getElementById('status');
+function updateStatus() {
+  const t = `Jaffar · försök ${S.trial}`;
+  if (S.phase === 'reward') { statusEl.textContent = `${t} · ${S.chosen.name}: socker!`; statusEl.className = 'status rew'; }
+  else if (S.phase === 'omission') { statusEl.textContent = `${t} · ${S.chosen.name}: inget socker`; statusEl.className = 'status om'; }
+  else if (S.phase === 'timeout') { statusEl.textContent = `${t} · inget val`; statusEl.className = 'status'; }
+  else { statusEl.textContent = `${t} · går · ${S.t.toFixed(1)} s` + (S.running ? '' : ' · pausad'); statusEl.className = 'status'; }
+}
+function updateStats() {
+  document.getElementById('sTrials').textContent = S.results.length;
+  document.getElementById('sRew').textContent = S.rewards;
+  const w = S.results.slice(-10);
+  document.getElementById('sPct').textContent = w.length ? Math.round(100 * w.filter(x => x === 'w').length / w.length) + '%' : '–';
+  updateVals();
+}
+
+/* Bilder */
+const pct = v => Math.round(v * 100);
+function renderSlots() {
+  pickWinner();
+  STIM.forEach((s, i) => {
+    const g = document.getElementById('th' + i).getContext('2d'); g.clearRect(0, 0, IMG, IMG); g.drawImage(s.canvas, 0, 0);
+    const m = document.getElementById('mp' + i).getContext('2d'); m.clearRect(0, 0, IMG, IMG); m.drawImage(s.map, 0, 0);
+    document.getElementById('nm' + i).textContent = s.name;
+    document.getElementById('sh' + i).innerHTML = [['#ffffff', s.white], ['#c3cad0', s.light], ['#737a81', s.mid], ['#121212', s.dark]].map(([c, v]) => `<i style="background:${c};width:${v * 100}%"></i>`).join('');
+    document.getElementById('mt' + i).textContent = `vitt ${pct(s.white)} % · ljust ${pct(s.light)} % · mellan ${pct(s.mid)} % · mörkt ${pct(s.dark)} %`;
+    document.getElementById('wt' + i).hidden = i !== winner;
+    document.getElementById('slot' + i).classList.toggle('win', i === winner);
+  });
+  document.getElementById('lA').textContent = STIM[0].name; document.getElementById('lB').textContent = STIM[1].name;
+  window.__applyPanels(); updateVals();
+}
+function setStim(i, stim) {
+  const old = STIM[i], m = matCache.get(old); if (m) { m.map.dispose(); m.dispose(); matCache.delete(old); }
+  STIM[i] = stim; PANELS.forEach(p => { if (p.img === old) p.img = stim; });
+  renderSlots();
+}
+async function loadFile(i, file) {
+  if (!file) return;
+  const mt = document.getElementById('mt' + i); mt.textContent = 'Läser bilden…';
+  let im = null, w = 0, h = 0;
+  try { im = await createImageBitmap(file); w = im.width; h = im.height; } catch (e) { im = null; }
+  if (!im) {
+    try {
+      const dataUrl = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
+      const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+      im = img; w = img.naturalWidth; h = img.naturalHeight;
+    } catch (e) { im = null; }
+  }
+  if (!im || !w || !h) { mt.textContent = 'Bilden gick inte att läsa. Prova en annan JPG, PNG eller WebP.'; return; }
+  try {
+    const side = Math.min(w, h), sx = (w - side) / 2, sy = (h - side) / 2;
+    const name = (file.name || '').replace(/\.[^.]+$/, '').slice(0, 40) || ('Bild ' + 'AB'[i]);
+    setStim(i, makeStim(name, g => { g.fillStyle = '#808080'; g.fillRect(0, 0, IMG, IMG); g.imageSmoothingQuality = 'high'; g.drawImage(im, sx, sy, side, side, 0, 0, IMG, IMG); }));
+    if (im.close) im.close();
+  } catch (e) { mt.textContent = 'Bilden lästes in men kunde inte analyseras (' + (e && e.name || 'fel') + ').'; }
+}
+[0, 1].forEach(i => {
+  document.getElementById('f' + i).addEventListener('change', e => { loadFile(i, e.target.files[0]); e.target.value = ''; });
+  const slot = document.getElementById('slot' + i);
+  slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag'); });
+  slot.addEventListener('dragleave', () => slot.classList.remove('drag'));
+  slot.addEventListener('drop', e => { e.preventDefault(); slot.classList.remove('drag'); loadFile(i, e.dataTransfer.files[0]); });
+});
+document.getElementById('defaults').onclick = () => { setStim(0, solid('Svart ruta', '#000')); setStim(1, solid('Vit ruta', '#fff')); };
+
+/* Kontroller */
+const playBtn = document.getElementById('play');
+playBtn.onclick = () => { S.running = !S.running; playBtn.textContent = S.running ? 'Pausa' : 'Kör'; };
+document.querySelectorAll('#speed button').forEach(b => b.onclick = () => { S.mult = +b.dataset.v; document.querySelectorAll('#speed button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+document.querySelectorAll('#cam button').forEach(b => b.onclick = () => setCam(b.dataset.v));
+document.getElementById('reset').onclick = () => { wAv.fill(1); wAp.fill(1); S.results = []; S.rewards = 0; S.trial = 0; newTrial(); updateStats(); };
+[['pDark', 'oDark', 'innateDark'], ['pLr', 'oLr', 'lr'], ['pNoise', 'oNoise', 'noise']].forEach(([id, oid, key]) => {
+  const el = document.getElementById(id), o = document.getElementById(oid);
+  const upd = () => { P[key] = +el.value; o.textContent = (+el.value).toFixed(2); updateVals(); };
+  el.addEventListener('input', upd); upd();
+});
+
+function resize() { const r = view.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(view);
+newTrial(); renderSlots(); updateStats(); resize(); setCam('arena');
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { S.running = false; playBtn.textContent = 'Kör'; }
+
+let last = performance.now(), acc = 0, frame = 0;
+function loop(now) {
+  const real = Math.min(.1, (now - last) / 1000); last = now;
+  if (S.running) { acc += real * S.mult; let guard = 0; while (acc >= DT && guard++ < 400) { step(DT); acc -= DT; } if (guard >= 400) acc = 0; }
+  updateFlyMesh(now); updateCamera(); renderer.render(scene, camera);
+  drawEyes();
+  if (frame++ % 2 === 0) drawBrain();
+  if (frame % 15 === 0) { drawChart(); updateStatus(); }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
